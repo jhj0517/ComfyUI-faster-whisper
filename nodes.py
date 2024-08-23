@@ -45,7 +45,7 @@ class LoadFasterWhisperModel:
     def load_model(self,
                    model: str,
                    device: str,
-                   ) -> faster_whisper.WhisperModel:
+                   ) -> Tuple[faster_whisper.WhisperModel]:
         model_dir = os.path.join(folder_paths.models_dir, "faster-whisper")
         os.makedirs(model_dir, exist_ok=True)
 
@@ -136,13 +136,13 @@ class FasterWhisperToSubtitle:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "transcriptions": ("TRANSCRIPTIONS", ),
-                "subtitle_format": (AVAILABLE_SUBTITLE_FORMAT, ),
+                "transcriptions": ("TRANSCRIPTIONS",),
+                "subtitle_format": (AVAILABLE_SUBTITLE_FORMAT,),
             },
         }
 
-    RETURN_TYPES = ("SUBTITLE")
-    RETURN_NAMES = ("subtitle")
+    RETURN_TYPES = ("SUBTITLE",)
+    RETURN_NAMES = ("subtitle",)
     FUNCTION = "format_to_subtitle"
     CATEGORY = "FASTERWHISPER"
 
@@ -151,10 +151,10 @@ class FasterWhisperToSubtitle:
                            subtitle_format: str,
                            ) -> Dict:
         subtitle = format_transcriptions_to_subtitle(transcriptions, subtitle_format)
-        subtitle = {
-            "subtitle": subtitle,
-            "subtitle_format": subtitle_format
-        }
+        # subtitle = {
+        #     "subtitle": subtitle,
+        #     "subtitle_format": subtitle_format
+        # }
         return subtitle
 
 
@@ -163,7 +163,7 @@ class SaveSubtitle:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "subtitle": ("SUBTITLE", ),
+                "subtitle": ("SUBTITLE", )
             },
             "optional": {
                 "prefix": ("STRING", {"default": "subtitle"}),
@@ -177,11 +177,10 @@ class SaveSubtitle:
     OUTPUT_NODE = True
 
     def save_subtitle(self,
-                      subtitle: Dict,
+                      subtitle: List,
                       prefix: str
                       ) -> str:
-        subtitle_format = subtitle["subtitle_format"]
-        subtitle = subtitle["subtitle"]
+        subtitle, subtitle_format = subtitle
         if subtitle_format not in AVAILABLE_SUBTITLE_FORMAT:
             raise ValueError(f"Output format not supported. Supported formats: {AVAILABLE_SUBTITLE_FORMAT}")
 
