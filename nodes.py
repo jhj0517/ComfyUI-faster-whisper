@@ -1,14 +1,15 @@
 import os
 import faster_whisper
-from typing import Union, BinaryIO, Dict, List
+from typing import Union, BinaryIO, Dict, List, Tuple
 import numpy as np
 
 import folder_paths
 from comfy.utils import ProgressBar
 
-from .subtitle_utils import AVAILABLE_SUBTITLE_FORMAT, format_transcriptions_to_subtitle
+from .subtitle_utils import AVAILABLE_SUBTITLE_FORMAT, format_transcriptions_to_subtitle, get_incremented_filename
 
 faster_whisper_script_dir_path = os.path.dirname(os.path.abspath(__file__))
+faster_whisper_output_dir_path = folder_paths.get_output_directory()
 
 
 class LoadFasterWhisperModel:
@@ -62,7 +63,7 @@ class FasterWhisperTranscription:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "audio": ("AUDIO", ),
+                "audio": ("AUDIO",),
                 "model": ("FASTERWHISPERMODEL", ),
             },
             "optional": {
@@ -140,7 +141,7 @@ class FasterWhisperToSubtitle:
             },
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("STRING", "STRING")
     RETURN_NAMES = ("subtitle",)
     FUNCTION = "format_to_subtitle"
     CATEGORY = "FASTERWHISPER"
@@ -148,6 +149,40 @@ class FasterWhisperToSubtitle:
     def format_to_subtitle(self,
                            transcriptions: List[Dict],
                            subtitle_format: str,
-                           ) -> str:
+                           ) -> Tuple[str, str]:
         subtitle = format_transcriptions_to_subtitle(transcriptions, subtitle_format)
-        return subtitle
+        return subtitle, subtitle_format
+
+
+class SaveSubtitle:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "subtitle": ("STRING", ),
+                "extension": ("STRING", ),
+            },
+            "optional": {
+                "prefix": ("STRING", {"default": "subtitle"}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("output_path",)
+    FUNCTION = "save_subtitle"
+    CATEGORY = "FASTERWHISPER"
+    OUTPUT_NODE = True
+
+    def save_subtitle(self,
+                      subtitle: str,
+                      extension: str,
+                      prefix: str
+                      ) -> str:
+        if extension not in AVAILABLE_SUBTITLE_FORMAT:
+            raise ValueError(f"Output format not supported. Supported formats: {AVAILABLE_SUBTITLE_FORMAT}")
+
+        output_path = get_incremented_filename(faster_whisper_output_dir_path, prefix, extension)
+
+        with open(output_path, "w") as f:
+            f.write(subtitle)
+        return output_path
