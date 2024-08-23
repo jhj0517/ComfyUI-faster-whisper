@@ -10,5 +10,3 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FasterWhisperTranscription": "FasterWhisper Transcription",
     "FasterWhisperToSubtitle": "FasterWhisper To Subtitle",
 }
-
-print("\n\nFaster-Whisper is loaded maybe?\n\n")
