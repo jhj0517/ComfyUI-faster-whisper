@@ -42,7 +42,7 @@ class LoadFasterWhisperModel:
     CATEGORY = "FASTERWHISPER"
 
     def load_model(self,
-                   model_type: str,
+                   model: str,
                    device: str,
                    ) -> faster_whisper.WhisperModel:
         model_dir = os.path.join(folder_paths.models_dir, "faster-whisper")
@@ -50,7 +50,7 @@ class LoadFasterWhisperModel:
 
         faster_whisper_model = faster_whisper.WhisperModel(
             device=device,
-            model_size_or_path=model_dir,
+            model_size_or_path=model,
             download_root=model_dir,
         )
 
@@ -60,11 +60,10 @@ class LoadFasterWhisperModel:
 class FasterWhisperTranscription:
     @classmethod
     def INPUT_TYPES(s):
-        faster_whisper.transcribe()
         return {
             "required": {
                 "audio": ("AUDIO", ),
-                "faster_whisper_model": ("FASTERWHISPERMODEL", ),
+                "model": ("FASTERWHISPERMODEL", ),
             },
             "optional": {
                 "lang": ("STRING", {"default": None}),
@@ -79,7 +78,7 @@ class FasterWhisperTranscription:
                 "length_penalty": ("FLOAT", {"default": 1.0}),
                 "repetition_penalty": ("FLOAT", {"default": 1.0}),
                 "no_repeat_ngram_size": ("INTEGER", {"default": 0}),
-                #"prefix": ("STRING", {"default": None}),
+                "prefix": ("STRING", {"default": None}),
                 "suppress_blank": ("BOOLEAN", {"default": True}),
                 "suppress_tokens": ("STRING", {"default": "-1"}),
                 "max_initial_timestamp": ("FLOAT", {"default": 1.0}),
@@ -108,8 +107,8 @@ class FasterWhisperTranscription:
     CATEGORY = "FASTERWHISPER"
 
     def transcribe(self,
-                   faster_whisper_model: faster_whisper.WhisperModel,
                    audio: Union[str, BinaryIO, np.ndarray],
+                   model: faster_whisper.WhisperModel,
                    **params,
                    ) -> List:
 
