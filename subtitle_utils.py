@@ -1,4 +1,5 @@
 from typing import List, Union
+import os
 
 AVAILABLE_SUBTITLE_FORMAT = ['.srt', '.vtt']
 
@@ -47,3 +48,15 @@ def format_to_subtitle_time(timestamp: Union[float, int],
         return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}.{int(milliseconds):03d}"
     else:
         raise ValueError(f"Output format not supported. Supported formats: {AVAILABLE_SUBTITLE_FORMAT}")
+
+
+def get_incremented_filename(directory, prefix, extension):
+    number = 0
+    while True:
+        filename = f"{prefix}_{number:04d}.{extension}"
+        output_path = os.path.join(directory, filename)
+
+        if not os.path.exists(output_path):
+            return output_path
+
+        number += 1
