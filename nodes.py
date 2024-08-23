@@ -55,7 +55,7 @@ class LoadFasterWhisperModel:
             download_root=model_dir,
         )
 
-        return faster_whisper_model
+        return (faster_whisper_model, )
 
 
 class FasterWhisperTranscription:
@@ -67,8 +67,8 @@ class FasterWhisperTranscription:
                 "model": ("FASTERWHISPERMODEL", ),
             },
             "optional": {
-                "lang": ("STRING", {"default": "auto"}),
-                "is_translate": ("BOOLEAN", {"default": False}),
+                "language": ("STRING", {"default": "auto"}),
+                "task": (["transcribe", "translate"], ),
                 "beam_size": ("INT", {"default": 5}),
                 "log_prob_threshold": ("FLOAT", {"default": -1.0}),
                 "no_speech_threshold": ("FLOAT", {"default": 0.6}),
@@ -111,7 +111,9 @@ class FasterWhisperTranscription:
                    audio: Union[str, BinaryIO, np.ndarray],
                    model: faster_whisper.WhisperModel,
                    **params,
-                   ) -> List:
+                   ) -> Tuple[List]:
+        if params["language"] == "auto":
+            params["language"] = None
 
         segments, info = model.transcribe(
             audio=audio,
@@ -128,7 +130,7 @@ class FasterWhisperTranscription:
                 "end": segment.end,
                 "text": segment.text
             })
-        return transcriptions
+        return (transcriptions, )
 
 
 class FasterWhisperToSubtitle:
@@ -149,10 +151,10 @@ class FasterWhisperToSubtitle:
     def format_to_subtitle(self,
                            transcriptions: List[Dict],
                            subtitle_format: str,
-                           ) -> List:
+                           ) -> Tuple[List]:
         subtitle = format_transcriptions_to_subtitle(transcriptions, subtitle_format)
         subtitle = [subtitle, subtitle_format]
-        return subtitle
+        return (subtitle,)
 
 
 class SaveSubtitle:
@@ -176,7 +178,7 @@ class SaveSubtitle:
     def save_subtitle(self,
                       subtitle: List,
                       prefix: str
-                      ) -> str:
+                      ) -> Tuple[str]:
         subtitle, subtitle_format = subtitle
         if subtitle_format not in AVAILABLE_SUBTITLE_FORMAT:
             raise ValueError(f"Output format not supported. Supported formats: {AVAILABLE_SUBTITLE_FORMAT}")
@@ -185,4 +187,4 @@ class SaveSubtitle:
 
         with open(output_path, "w") as f:
             f.write(subtitle)
-        return output_path
+        return (output_path,)
