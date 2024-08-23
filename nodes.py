@@ -149,12 +149,9 @@ class FasterWhisperToSubtitle:
     def format_to_subtitle(self,
                            transcriptions: List[Dict],
                            subtitle_format: str,
-                           ) -> Dict:
+                           ) -> List:
         subtitle = format_transcriptions_to_subtitle(transcriptions, subtitle_format)
-        # subtitle = {
-        #     "subtitle": subtitle,
-        #     "subtitle_format": subtitle_format
-        # }
+        subtitle = [subtitle, subtitle_format]
         return subtitle
 
 
