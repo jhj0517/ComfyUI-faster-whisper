@@ -102,7 +102,7 @@ class FasterWhisperTranscription:
             }
         }
 
-    RETURN_TYPES = ("LIST",)
+    RETURN_TYPES = ("TRANSCRIPTIONS",)
     RETURN_NAMES = ("transcriptions",)
     FUNCTION = "transcribe"
     CATEGORY = "FASTERWHISPER"
@@ -136,22 +136,26 @@ class FasterWhisperToSubtitle:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "transcriptions": ("LIST", ),
+                "transcriptions": ("TRANSCRIPTIONS", ),
                 "subtitle_format": (AVAILABLE_SUBTITLE_FORMAT, ),
             },
         }
 
-    RETURN_TYPES = ("STRING", "STRING")
-    RETURN_NAMES = ("subtitle",)
+    RETURN_TYPES = ("SUBTITLE")
+    RETURN_NAMES = ("subtitle")
     FUNCTION = "format_to_subtitle"
     CATEGORY = "FASTERWHISPER"
 
     def format_to_subtitle(self,
                            transcriptions: List[Dict],
                            subtitle_format: str,
-                           ) -> Tuple[str, str]:
+                           ) -> Dict:
         subtitle = format_transcriptions_to_subtitle(transcriptions, subtitle_format)
-        return subtitle, subtitle_format
+        subtitle = {
+            "subtitle": subtitle,
+            "subtitle_format": subtitle_format
+        }
+        return subtitle
 
 
 class SaveSubtitle:
@@ -159,8 +163,7 @@ class SaveSubtitle:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "subtitle": ("STRING", ),
-                "extension": ("STRING", ),
+                "subtitle": ("SUBTITLE", ),
             },
             "optional": {
                 "prefix": ("STRING", {"default": "subtitle"}),
@@ -174,14 +177,15 @@ class SaveSubtitle:
     OUTPUT_NODE = True
 
     def save_subtitle(self,
-                      subtitle: str,
-                      extension: str,
+                      subtitle: Dict,
                       prefix: str
                       ) -> str:
-        if extension not in AVAILABLE_SUBTITLE_FORMAT:
+        subtitle_format = subtitle["subtitle_format"]
+        subtitle = subtitle["subtitle"]
+        if subtitle_format not in AVAILABLE_SUBTITLE_FORMAT:
             raise ValueError(f"Output format not supported. Supported formats: {AVAILABLE_SUBTITLE_FORMAT}")
 
-        output_path = get_incremented_filename(faster_whisper_output_dir_path, prefix, extension)
+        output_path = get_incremented_filename(faster_whisper_output_dir_path, prefix, subtitle_format)
 
         with open(output_path, "w") as f:
             f.write(subtitle)
