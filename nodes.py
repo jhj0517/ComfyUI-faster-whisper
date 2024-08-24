@@ -6,7 +6,7 @@ import numpy as np
 import folder_paths
 from comfy.utils import ProgressBar
 
-from .subtitle_utils import AVAILABLE_SUBTITLE_FORMAT, format_transcriptions_to_subtitle, get_incremented_filename
+from .utils.subtitle_utils import AVAILABLE_SUBTITLE_FORMAT, format_transcriptions_to_subtitle, get_incremented_filename
 
 faster_whisper_script_dir_path = os.path.dirname(os.path.abspath(__file__))
 faster_whisper_model_dir = os.path.join(folder_paths.models_dir, "faster-whisper")
