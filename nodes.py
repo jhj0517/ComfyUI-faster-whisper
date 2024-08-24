@@ -243,3 +243,4 @@ class InputFilePath:
             raise ValueError(f"File not found: {filepath}")
 
         return (filepath,)
+
