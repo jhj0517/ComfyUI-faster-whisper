@@ -66,7 +66,7 @@ class FasterWhisperTranscription:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "audio": ("AUDIO",),
+                "audio": ("FILEPATH", ),
                 "model": ("FASTERWHISPERMODEL", ),
             },
             "optional": {
@@ -115,7 +115,6 @@ class FasterWhisperTranscription:
                    model: faster_whisper.WhisperModel,
                    **params,
                    ) -> Tuple[List]:
-        audio = self.preprocess_audio(audio)
         params = self.collect_params(params)
 
         segments, info = model.transcribe(
