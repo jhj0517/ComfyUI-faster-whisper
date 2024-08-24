@@ -142,7 +142,7 @@ class FasterWhisperTranscription:
 
     @staticmethod
     def collect_params(params):
-        # Set None values manually because this seems not allowed to use in ComfyUI
+        # Set None values manually because None seems not allowed as default in ComfyUI
         if "language" in params and params["language"] == "auto":
             params["language"] = None
         if "suppress_tokens" in params:
