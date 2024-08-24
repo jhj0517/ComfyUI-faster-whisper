@@ -10,7 +10,7 @@ Subtitle generation workflow is included in [workflows](https://github.com/jhj05
 
 # Installation
 
-1. git clone repository
+1. git clone repository into `ComfyUI\custom_nodes\`
 ```
 https://github.com/jhj0517/ComfyUI-faster-whisper.git
 ```
