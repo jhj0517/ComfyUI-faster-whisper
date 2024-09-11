@@ -7,6 +7,7 @@ import folder_paths
 from comfy.utils import ProgressBar
 
 from .utils.subtitle_utils import AVAILABLE_SUBTITLE_FORMAT, format_transcriptions_to_subtitle, get_incremented_filename
+from .utils.path_utils import collect_model_paths
 
 faster_whisper_script_dir_path = os.path.dirname(os.path.abspath(__file__))
 faster_whisper_model_dir = os.path.join(folder_paths.models_dir, "faster-whisper")
@@ -19,20 +20,7 @@ INT_NONE_VALUE = -999
 class LoadFasterWhisperModel:
     @classmethod
     def INPUT_TYPES(s):
-        faster_whisper_models = [
-            "tiny.en",
-            "tiny",
-            "base.en",
-            "base",
-            "small.en",
-            "small",
-            "medium.en",
-            "medium",
-            "large-v1",
-            "large-v2",
-            "large-v3",
-            "large"
-        ]
+        faster_whisper_models = list(collect_model_paths().keys())
 
         return {
             "required": {
@@ -51,11 +39,13 @@ class LoadFasterWhisperModel:
                    device: str,
                    ) -> Tuple[faster_whisper.WhisperModel]:
         os.makedirs(faster_whisper_model_dir, exist_ok=True)
+        model = collect_model_paths()[model]
 
         faster_whisper_model = faster_whisper.WhisperModel(
             device=device,
             model_size_or_path=model,
             download_root=faster_whisper_model_dir,
+            local_files_only=False
         )
 
         return (faster_whisper_model, )
