@@ -117,11 +117,19 @@ class FasterWhisperTranscription:
         transcriptions = []
         for segment in segments:
             comfy_pbar.update_absolute(segment.end)
-            transcriptions.append({
-                "start": segment.start,
-                "end": segment.end,
-                "text": segment.text
-            })
+            if hasattr(segment, "words") and segment.words is not None:
+                for w in segment.words:
+                    transcriptions.append({
+                        "start": w.start,
+                        "end": w.end,
+                        "text": w.word
+                    })
+            else:
+                transcriptions.append({
+                    "start": segment.start,
+                    "end": segment.end,
+                    "text": segment.text
+                })
         return (transcriptions, )
 
     @staticmethod
