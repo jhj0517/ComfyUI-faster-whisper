@@ -4,6 +4,7 @@ from .nodes import *
 NODE_CLASS_MAPPINGS = {
     "LoadFasterWhisperModel": LoadFasterWhisperModel,
     "FasterWhisperTranscription": FasterWhisperTranscription,
+    "FasterWhisperTranscriptionWithAudio": FasterWhisperTranscriptionWithAudio,
     "FasterWhisperToSubtitle": FasterWhisperToSubtitle,
     "SaveSubtitle": SaveSubtitle,
     "InputFilePath": InputFilePath,
@@ -11,6 +12,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadFasterWhisperModel": "(Down)Load FasterWhisper Model",
     "FasterWhisperTranscription": "FasterWhisper Transcription",
+    "FasterWhisperTranscriptionWithAudio": "FasterWhisper Transcription With Audio",
     "FasterWhisperToSubtitle": "FasterWhisper To Subtitle",
     "InputFilePath": "Input FilePath",
 }
