@@ -234,3 +234,130 @@ class InputFilePath:
 
         return (filepath,)
 
+class FasterWhisperTranscriptionWithAudio:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "audio": ("AUDIO",),
+                "model": ("FASTERWHISPERMODEL", ),
+            },
+            "optional": {
+                "language": ("STRING", {"default": "auto"}),
+                "task": (["transcribe", "translate"], ),
+                "beam_size": ("INT", {"default": 5}),
+                "log_prob_threshold": ("FLOAT", {"default": -1.0}),
+                "no_speech_threshold": ("FLOAT", {"default": 0.6}),
+                "best_of": ("INT", {"default": 5}),
+                "patience": ("FLOAT", {"default": 1}),
+                "temperature": ("FLOAT", {"default": 0.0}),
+                "compression_ratio_threshold": ("FLOAT", {"default": 2.4}),
+                "length_penalty": ("FLOAT", {"default": 1.0}),
+                "repetition_penalty": ("FLOAT", {"default": 1.0}),
+                "no_repeat_ngram_size": ("INT", {"default": 0}),
+                "prefix": ("STRING", {"default": ""}),
+                "suppress_blank": ("BOOLEAN", {"default": True}),
+                "suppress_tokens": ("STRING", {"default": "[-1]"}),
+                "max_initial_timestamp": ("FLOAT", {"default": 1.0}),
+                "word_timestamps": ("BOOLEAN", {"default": False}),
+                "prepend_punctuations": ("STRING", {"default": "\"'“¿([{-"}),
+                "append_punctuations": ("STRING", {"default": "\"'.。,，!！?？:：”)]}、"}),
+                "max_new_tokens": ("INT", {"default": INT_NONE_VALUE}),
+                "chunk_length": ("INT", {"default": INT_NONE_VALUE}),
+                "hallucination_silence_threshold": ("FLOAT", {"default": FLOAT_NONE_VALUE}),
+                "hotwords": ("STRING", {"default": ""}),
+                "language_detection_threshold": ("FLOAT", {"default": FLOAT_NONE_VALUE}),
+                "language_detection_segments": ("INT", {"default": 1}),
+                "prompt_reset_on_temperature": ("FLOAT", {"default": 0.5}),
+                "condition_on_previous_text": ("BOOLEAN", {"default": True}),
+                "initial_prompt": ("STRING", {"default": ""}),
+                "without_timestamps": ("BOOLEAN", {"default": False}),
+                "vad_filter": ("BOOLEAN", {"default": False}),
+                "vad_parameters": ("STRING", {"default": ""}),
+                "clip_timestamps": ("STRING", {"default": "0"}),
+            }
+        }
+
+    RETURN_TYPES = ("TRANSCRIPTIONS",)
+    RETURN_NAMES = ("transcriptions",)
+    FUNCTION = "transcribe"
+    CATEGORY = "FASTERWHISPER"
+
+    def transcribe(self,
+                   audio: Dict,
+                   model: faster_whisper.WhisperModel,
+                   **params,
+                   ) -> Tuple[List]:
+        
+        audio_array = self.preprocess_audio(audio)
+
+        params = self.collect_params(params)
+
+        segments, info = model.transcribe(
+            audio=audio_array,
+            **params,
+        )
+
+        comfy_pbar = ProgressBar(info.duration)
+
+        transcriptions = []
+        for segment in segments:
+            comfy_pbar.update_absolute(segment.end)
+            transcriptions.append({
+                "start": segment.start,
+                "end": segment.end,
+                "text": segment.text
+            })
+        return (transcriptions, )
+
+    @staticmethod
+    def preprocess_audio(audio):
+        import torchaudio.functional as F
+        import torch
+
+        waveform = audio["waveform"]
+        sample_rate = audio["sample_rate"]
+
+        if sample_rate <= 0:
+            raise ValueError(f"Invalid sample rate: {sample_rate}")
+
+        if waveform.dim() == 3:
+            waveform = waveform.squeeze(0)
+
+        if waveform.dim() == 2 and waveform.shape[0] > 1:
+            waveform = waveform.mean(dim=0, keepdim=True)
+
+        if sample_rate != 16000:
+            waveform = F.resample(waveform, orig_freq=sample_rate, new_freq=16000)
+
+        waveform = waveform.squeeze()
+
+        audio_array = waveform.detach().cpu().numpy().astype(np.float32)
+
+        return audio_array
+
+    @staticmethod
+    def collect_params(params):
+        # Set None values manually because None seems not allowed as default in ComfyUI
+        if "language" in params and params["language"] == "auto":
+            params["language"] = None
+        if "suppress_tokens" in params:
+            params["suppress_tokens"] = eval(params["suppress_tokens"])
+        if "prefix" in params and not params["prefix"]:
+            params["prefix"] = None
+        if "hotwords" in params and not params["hotwords"]:
+            params["hotwords"] = None
+        if "initial_prompt" in params and not params["initial_prompt"]:
+            params["initial_prompt"] = None
+        if "vad_parameters" in params and not params["vad_parameters"]:
+            params["vad_parameters"] = None
+        if "max_new_tokens" in params and params["max_new_tokens"] == INT_NONE_VALUE:
+            params["max_new_tokens"] = None
+        if "chunk_length" in params and params["chunk_length"] == INT_NONE_VALUE:
+            params["chunk_length"] = None
+        if "hallucination_silence_threshold" in params and params["hallucination_silence_threshold"] == FLOAT_NONE_VALUE:
+            params["hallucination_silence_threshold"] = None
+        if "language_detection_threshold" in params and params["language_detection_threshold"] == FLOAT_NONE_VALUE:
+            params["language_detection_threshold"] = None
+
+        return params
